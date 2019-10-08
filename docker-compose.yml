@@ -7,7 +7,7 @@ services:
   #######################################
   kong-database:
     image: postgres:9.6
-    restart: always
+    restart: on-failure 
     ports:
       - "5432:5432"
     networks:
@@ -35,8 +35,6 @@ services:
     restart: on-failure
     environment:
       KONG_PG_HOST: kong-database
-    links:
-      - kong-database
     depends_on:
       - kong-database
 
@@ -46,7 +44,7 @@ services:
   #######################################
   kong:
     image: kong:latest
-    restart: always
+    restart: on-failure 
     networks:
       - kong-net
     environment:
@@ -76,13 +74,11 @@ services:
   # Konga database prepare
   #######################################
   konga-prepare:
-    image: pantsel/konga:next
+    image: pantsel/konga:0.14.1
     command: "-c prepare -a postgres -u postgresql://kong@kong-database:5432/konga_db"
     networks:
       - kong-net
     restart: on-failure
-    links:
-      - kong-database
     depends_on:
       - kong-database
 
@@ -90,10 +86,10 @@ services:
   # Konga: Kong GUI
   #######################################
   konga:
-    image: pantsel/konga:next
-    restart: always
+    image: pantsel/konga:0.14.1
+    restart: on-failure 
     networks:
-        - kong-net
+      - kong-net
     environment:
       # or cassandra
       DB_ADAPTER: postgres
@@ -106,8 +102,6 @@ services:
       NODE_ENV: production
     depends_on:
       - konga-prepare
-    links:
-      - kong
     ports:
       - "1337:1337"
 
